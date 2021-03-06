@@ -24,7 +24,7 @@
 <meta property="og:description" content="今天做leetcode每日一题，第一次遇到了需要使用单调栈来解决的问题，写个博客来讲一下什么是单调栈 今天的leetcode题目:leetcode503题:下一个更大元素2 单调栈是什么当然单调栈不是一个具体的数据结构，和优先队列不同，只是一个普通的先进后出的栈，只是自己的维护这个栈的时候需要保持这个栈的单调性。 单调递增栈 指的是从栈顶到栈底的值是递增的 单调递减栈 指的是从栈顶到栈底的值是递减">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-03-06T08:25:42.000Z">
-<meta property="article:modified_time" content="2021-03-06T12:04:47.950Z">
+<meta property="article:modified_time" content="2021-03-06T12:12:31.916Z">
 <meta property="article:author" content="Cloud">
 <meta property="article:tag" content="算法与数据结构">
 <meta name="twitter:card" content="summary">
@@ -99,8 +99,10 @@
 </ol>
 <p>以上就是维护一个单调递增栈的效果，无论什么时候从栈顶到栈底都是递增的</p>
 <h2 id="题目的解决"><a href="#题目的解决" class="headerlink" title="题目的解决"></a>题目的解决</h2><p>给定一个循环数组（最后一个元素的下一个元素是数组的第一个元素），输出每个元素的下一个更大元素。数字 x 的下一个更大的元素是按数组遍历顺序，这个数字之后的第一个比它更大的数，这意味着你应该循环地搜索它的下一个更大的数。如果不存在，则输出 -1。</p>
-<p>这个题很适合用单调递增栈来解决，遍历数组，如果当前元素比栈顶元素大小要低，那就压入栈中，如果当前元素比栈顶元素大小要大，那么这个数符合题目要求，将栈中比这个数小的元素全部出栈即可。由于是循环数组，所以需要遍历两次序列。</p>
-<p>代码官方题解给的已经很好了，就不再往上贴了。</p>
+<p>这个题很适合用单调递增栈来解决，遍历数组，如果当前元素比栈顶元素要小，那就压入栈中，如果当前元素比栈顶元素大小要大，那么这个数符合题目要求，将栈中比这个数小的元素全部出栈即可。由于是循环数组，所以需要遍历两次序列。</p>
+<p>官方题解的代码已经非常好了，就直接贴在下面的，防止读者一直在不同页面跳来跳去：</p>
+<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/next-greater-element-ii/solution/xia-yi-ge-geng-da-yuan-su-ii-by-leetcode-bwam/">官方题解</a></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">nextGreaterElements</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> n = nums.size();</span><br><span class="line">        <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">ret</span><span class="params">(n, <span class="number">-1</span>)</span></span>;</span><br><span class="line">        <span class="built_in">stack</span>&lt;<span class="keyword">int</span>&gt; stk;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n * <span class="number">2</span> - <span class="number">1</span>; i++) &#123;</span><br><span class="line">            <span class="keyword">while</span> (!stk.empty() &amp;&amp; nums[stk.top()] &lt; nums[i % n]) &#123;</span><br><span class="line">                ret[stk.top()] = nums[i % n];</span><br><span class="line">                stk.pop();</span><br><span class="line">            &#125;</span><br><span class="line">            stk.push(i % n);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
     
   </div>
