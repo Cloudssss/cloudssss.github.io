@@ -83,7 +83,7 @@
 <p>下面将介绍图形渲染管线的一系列流程。</p>
 <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>图形渲染管线的流程划分有很多中，这篇文章将采用<strong>应用阶段</strong>、<strong>几何处理</strong>、<strong>光栅化</strong>、<strong>像素处理</strong>将整个图形渲染管线分成这四个阶段依次来进行介绍。</p>
 <p>以上这四个阶段是根据<em>Real-Time Rendering 4th</em>这本书来划分的</p>
-<p><img src="https://i.loli.net/2021/03/09/ArOl34RwZjdBhJ6.png" alt="渲染管线概述.PNG"></p>
+<p><img src="https://i.loli.net/2021/03/09/ArOl34RwZjdBhJ6.png" alt="渲染管线概述"></p>
 <h2 id="应用阶段"><a href="#应用阶段" class="headerlink" title="应用阶段"></a>应用阶段</h2><p>应用阶段是由开发者主导的阶段，这一阶段的主要任务是</p>
 <ol>
 <li>准备好三维场景的数据</li>
@@ -101,7 +101,7 @@
 <h3 id="调用Draw-Call"><a href="#调用Draw-Call" class="headerlink" title="调用Draw Call"></a>调用Draw Call</h3><p>设置好渲染状态之后，CPU就使用<strong>Draw Call</strong>命令来让GPU来对图元进行渲染</p>
 <p>Draw Call是CPU的命令，过多的话会影响性能，在使用过程中需要用批处理的方法来合并网格，从而减少Draw Call的使用。</p>
 <h2 id="几何处理"><a href="#几何处理" class="headerlink" title="几何处理"></a>几何处理</h2><p>几何处理阶段本身也是一个小的流水线，依次是<strong>顶点着色器</strong>、<strong>投影</strong>、<strong>剪裁</strong>、<strong>屏幕映射</strong></p>
-<p><img src="https://i.loli.net/2021/03/09/bz6kHtjh3yCMSPa.png" alt="几何处理.PNG"></p>
+<p><img src="https://i.loli.net/2021/03/09/bz6kHtjh3yCMSPa.png" alt="几何处理"></p>
 <p>几何处理阶段主要进行逐三角形的和逐顶点的操作，下面将介绍这几个阶段</p>
 <h3 id="顶点着色器"><a href="#顶点着色器" class="headerlink" title="顶点着色器"></a>顶点着色器</h3><p>顶点着色器是流水线第一个阶段，输入来自CPU，顶点着色器的处理单位是顶点，输入进来的每一个顶点都会调用一次顶点着色器。顶点着色器最基本的作用是将顶点坐标从模型空间转换到<strong>齐次裁剪空间</strong>之中。</p>
 <h3 id="投影"><a href="#投影" class="headerlink" title="投影"></a>投影</h3><p>投影即是将模型投影到虚拟摄像机之中，从而显示到屏幕这个二维平面上。</p>
@@ -115,7 +115,22 @@
 <h3 id="屏幕映射"><a href="#屏幕映射" class="headerlink" title="屏幕映射"></a>屏幕映射</h3><p>把每个图元的x，y坐标通过变换变成屏幕坐标，z坐标没有变化，屏幕坐标和z坐标一起被称为窗口坐标。</p>
 <p>窗口坐标系会一起被传送到光栅化阶段。</p>
 <p><strong>注意</strong>：OpenGL的屏幕坐标系起始点是左下角，DirectX则是左上角。</p>
-<p>未完待续……</p>
+<h2 id="光栅化"><a href="#光栅化" class="headerlink" title="光栅化"></a>光栅化</h2><p>光栅化阶段又分为两个小的阶段，包括<strong>三角形设置</strong>、<strong>三角形遍历</strong></p>
+<p><img src="https://i.loli.net/2021/03/10/OYhcsJZ4oFGIvwA.png" alt="光栅化"></p>
+<h3 id="三角形设置"><a href="#三角形设置" class="headerlink" title="三角形设置"></a>三角形设置</h3><p><strong>三角形设置</strong>阶段会计算光栅化一个三角形网格所需的信息，上一阶段输出的都是三角网格的顶点，而这个阶段会计算得到三角形的边界像素的坐标信息。以便于下一阶段判断像素是否在三角形中。</p>
+<h3 id="三角形遍历"><a href="#三角形遍历" class="headerlink" title="三角形遍历"></a>三角形遍历</h3><p><strong>三角形遍历</strong>阶段会检查每一个像素是否被一个三角网格覆盖，如果被覆盖的话会生成一个<strong>片元</strong>。通过三角形的三个顶点的信息，对三角形内部的片元进行颜色和深度的插值。</p>
+<h2 id="像素处理"><a href="#像素处理" class="headerlink" title="像素处理"></a>像素处理</h2><p>这个时候，所有被认为在三角形内部的点都已经被发现了，像素处理阶段被分为<strong>像素着色</strong>、<strong>合并</strong>两个部分。</p>
+<p><img src="https://i.loli.net/2021/03/10/OtkhFzruApcGNq6.png" alt="像素处理"></p>
+<h3 id="像素着色"><a href="#像素着色" class="headerlink" title="像素着色"></a>像素着色</h3><p>在OpenGL中被称为<strong>片元着色</strong></p>
+<p>所有逐片元的计算都是在这里完成的，使插值了的着色数据作为输入。最终结果是一个或多个将被传入到下一个阶段的颜色。</p>
+<p>程序员可以高度操作这一阶段，利用片元着色器来实现。</p>
+<p>这一阶段有各种各样的技术，其中最重要的就是texturing。</p>
+<h3 id="合并"><a href="#合并" class="headerlink" title="合并"></a>合并</h3><p>这个阶段的主要任务是</p>
+<ul>
+<li>决定每个片元的可见性，涉及到了很多测试的工作，包括深度测试和模板测试</li>
+<li>如果一个片元通过了所有的测试，就需要把这个片元的颜色值和已经存储在颜色缓冲区中的颜色进行混合</li>
+</ul>
+<p>渲染过程是一个物体一个物体画到屏幕上的，每个像素的颜色信息被存在一个名为颜色缓冲的地方。执行这次渲染的时候，可能会用到上次渲染的结果。如果物体是非透明物体，可以直接关闭<strong>混合</strong>操作，这样片元着色器计算得到的颜色值会直接覆盖颜色缓冲区中的颜色值。而如果是半透明物体，则需要使用混合操作来让物体看起来是透明的。</p>
 
     
   </div>
