@@ -84,7 +84,7 @@
 <h2 id="第一级空间配置器"><a href="#第一级空间配置器" class="headerlink" title="第一级空间配置器"></a>第一级空间配置器</h2><p>第一级空间配置器较为简单，使用malloc(),free(),realloc()等C函数执行实际的内存配置、释放、重配置操作</p>
 <h2 id="第二级空间配置器"><a href="#第二级空间配置器" class="headerlink" title="第二级空间配置器"></a>第二级空间配置器</h2><p>第二级配置器多了一些机制，用于避免太多小额区块造成的内存碎片，由于一块内存中包含有两部分：<strong>用于记录内存大小的cookie</strong>、<strong>内存</strong>，如果申请的内存过小，那么这个cookie相对来说占的比重会更大，从而造成不必要的浪费。</p>
 <p>SGI第二级配置器的做法是，如果申请的内存区块够大（超过128字节），就直接移交给第一级配置器来处理，如果区块小于128字节，就用内存池（memory pool）来进行管理。</p>
-<p>第二级配置器在申请内存的时候，会直接申请一大块你村，并用一个自由链表(<em>free-list</em>)来维护这一块内存。下次需要申请内存的时候，就直接冲<em>free-lists</em>中挑出一块内存来使用，如果客端想要归还内存，配置器就会将这块内存回收到<em>free-lists</em>之中。</p>
+<p>第二级配置器在申请内存的时候，会直接申请一大块内存，并用十六个自由链表(<em>free-list</em>)来维护这一块内存。下次需要申请内存的时候，就直接冲<em>free-lists</em>中挑出一块内存来使用，如果客端想要归还内存，配置器就会将这块内存回收到<em>free-lists</em>之中。</p>
 <p>为了方便管理，SGI第二级配置器会将任何小额区块的内存上调至8的倍数，维护16个free-list，大小分别为8、16、24、32、40、48、56、64、72、80、88、96、104、112、120、128字节。<em>free-lists</em>的节点结构如下：</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">union</span> <span class="title">obj</span>&#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> <span class="title">obj</span> * <span class="title">free_list_link</span>;</span></span><br><span class="line">    <span class="keyword">char</span> client_data[<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
