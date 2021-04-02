@@ -62,6 +62,55 @@
   <header>
     
       <div class="icon"></div>
+      <a href="/2021/04/02/STL的空间配置器/">
+  <time datetime="2021-04-02T05:59:20.000Z">
+    2021-04-02
+  </time>
+</a>
+    
+    
+  
+    <h1 class="title"><a href="/2021/04/02/STL的空间配置器/">STL的空间配置器</a></h1>
+  
+
+  </header>
+  
+  <div class="entry">
+    
+      <p>最近在阅读《STL源码剖析》这本书，会将自己觉得比较有意思的东西写在博客中</p>
+<p>这本书中最先介绍的就是空间配置器的使用，在SGI STL中，分为两级的空间配置器，下面依次介绍这两种空间配置器是如何进行STL的内存管理的</p>
+<h2 id="配置器的总体介绍"><a href="#配置器的总体介绍" class="headerlink" title="配置器的总体介绍"></a>配置器的总体介绍</h2><p>SGI STL使用的是malloc()和free()函数来进行内存分配和释放的，考虑到小型区块可能造成的内存破碎的问题，SGI设计了双层的空间配置器。第一级配置器直接使用malloc()和free()，比较简单，第二级配置器则采用了内存池的技术，来减少内存的破碎。</p>
+<p>当然没看过这本书的人可能会疑惑，到底什么是空间配置器？这里可以稍微下个定义，你可以认为空间配置器(allocator)是每个容器底层的一个对象，里面包含了一堆函数，用于给容器来分配内存空间。</p>
+<h2 id="第一级空间配置器"><a href="#第一级空间配置器" class="headerlink" title="第一级空间配置器"></a>第一级空间配置器</h2><p>第一级空间配置器较为简单，使用malloc(),free(),realloc()等C函数执行实际的内存配置、释放、重配置操作</p>
+<h2 id="第二级空间配置器"><a href="#第二级空间配置器" class="headerlink" title="第二级空间配置器"></a>第二级空间配置器</h2><p>第二级配置器多了一些机制，用于避免太多小额区块造成的内存碎片，由于一块内存中包含有两部分：<strong>用于记录内存大小的cookie</strong>、<strong>内存</strong>，如果申请的内存过小，那么这个cookie相对来说占的比重会更大，从而造成不必要的浪费。</p>
+<p>SGI第二级配置器的做法是，如果申请的内存区块够大（超过128字节），就直接移交给第一级配置器来处理，如果区块小于128字节，就用内存池（memory pool）来进行管理。</p>
+<p>第二级配置器在申请内存的时候，会直接申请一大块你村，并用一个自由链表(<em>free-list</em>)来维护这一块内存。下次需要申请内存的时候，就直接冲<em>free-lists</em>中挑出一块内存来使用，如果客端想要归还内存，配置器就会将这块内存回收到<em>free-lists</em>之中。</p>
+<p>为了方便管理，SGI第二级配置器会将任何小额区块的内存上调至8的倍数，维护16个free-list，大小分别为8、16、24、32、40、48、56、64、72、80、88、96、104、112、120、128字节。<em>free-lists</em>的节点结构如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">union</span> <span class="title">obj</span>&#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> <span class="title">obj</span> * <span class="title">free_list_link</span>;</span></span><br><span class="line">    <span class="keyword">char</span> client_data[<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="关于free-lists的解释"><a href="#关于free-lists的解释" class="headerlink" title="关于free-lists的解释"></a>关于free-lists的解释</h3><p>节点是union的结构，结构中free_list_link和client_data[1]公用一块内存，这是为了节省内存，当该节点的内存并没有被使用的时候，结构中存储的是指向下一个节点的地址，当该节点的内存被使用的时候，存储的即是内存的地址。这样就不用在节点中开两个地址的变量，从而节约了内存。</p>
+<h3 id="关于空间配置函数allocate"><a href="#关于空间配置函数allocate" class="headerlink" title="关于空间配置函数allocate()"></a>关于空间配置函数allocate()</h3><p>在网上找到的关于这个函数的解释都十分的不清楚，这里给出代码的合理解释</p>
+<p>首先需要注意的是，有许多个8个字节大小的内存空间，所有的8字节大小的内存空间都由一个链表管理，之后的许多个16个字节大小的内存空间、24个字节大小的内存空间也和这个类似，每种大小的内存空间都由一个链表来进行管理，所以说一共有16个<em>free-list</em>。</p>
+<p>以96个字节大小的内存空间为例子，二级空间配置器中由一个数组free_list[16]，这个数组的每一个元素，存储一个内存空间的地址，这个地址指向的就是96字节大小的<em>free-list</em>的第一个结点，而这个节点世界上就是一个内存空间，只是这个内存空间的前面四个字节，存储的是指向下一个节点的地址。如果要取出这块内存空间，需要将free_list[11]这个元素更新成下一个节点的地址。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> * <span class="title">allocate</span><span class="params">(<span class="keyword">size_t</span> n)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    obj * __VOLATILE * my_free_list;</span><br><span class="line">    obj * __RESTRICT result;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 如果大于__MAX_BYTES就调用第一级配置器</span></span><br><span class="line">    <span class="keyword">if</span> (n &gt; (<span class="keyword">size_t</span>) __MAX_BYTES) &#123;</span><br><span class="line">        <span class="keyword">return</span> (malloc_alloc::allocate(n));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 找到free_list[11]（96字节大小）这个元素的地址，这个元素的内容也是一个地址，指的是一个内存空间</span></span><br><span class="line">    my_free_list = free_list + FREELIST_INDEX(n);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里是取出了这块内存</span></span><br><span class="line">    result = *my_free_list;</span><br><span class="line">    <span class="keyword">if</span> (result == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">void</span> *r = refill(ROUND_UP(n));</span><br><span class="line">        <span class="keyword">return</span> r;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将free_list[11]的值改为下一个96字节大小的内存空间的地址</span></span><br><span class="line">    *my_free_list = result -&gt; free_list_link;</span><br><span class="line">    <span class="keyword">return</span> (result);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+      
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+
+  
+    <article class="post">
+  <header>
+    
+      <div class="icon"></div>
       <a href="/2021/03/13/当在浏览器中输入google-com并按下回车后发生了什么/">
   <time datetime="2021-03-13T11:41:45.000Z">
     2021-03-13
