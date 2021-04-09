@@ -1,0 +1,346 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>Cloud&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="Cloud">
+  
+  
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Cloud&#39;s Blog">
+<meta property="og:url" content="http://example.com/page/2/index.html">
+<meta property="og:site_name" content="Cloud&#39;s Blog">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="Cloud">
+<meta name="twitter:card" content="summary">
+  
+  
+    <link rel="icon" type="image/x-icon" href="/1.jpg">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div class="wrapper">
+    <header id="header">
+  <div class="title">
+    <h1><a href="/">Cloud&#39;s Blog</a></h1>
+    <p><a href="/"></a></p>
+  </div>
+  <nav class="nav">
+    <ul>
+      
+        <li><a href="/">Home</a></li>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+        <li><a href="/about/me.html">About</a></li>
+      
+        <li><a href="/tags">Tags</a></li>
+      
+      
+    </ul>
+    <div class="clearfix"></div>
+  </nav>
+  <div class="clearfix"></div>
+</header>
+    <div class="content">
+
+
+
+
+  
+    <article class="post">
+  <header>
+    
+      <div class="icon"></div>
+      <a href="/2021/03/09/图形渲染管线/">
+  <time datetime="2021-03-09T07:12:08.000Z">
+    2021-03-09
+  </time>
+</a>
+    
+    
+  
+    <h1 class="title"><a href="/2021/03/09/图形渲染管线/">图形渲染管线</a></h1>
+  
+
+  </header>
+  
+  <div class="entry">
+    
+      <hr>
+<div class="toc">
+
+<!-- toc -->
+
+<ul>
+<li><a href="#gai-shu">概述</a></li>
+<li><a href="#ying-yong-jie-duan">应用阶段</a></li>
+<li><a href="#ji-he-chu-li">几何处理</a></li>
+<li><a href="#guang-zha-hua">光栅化</a></li>
+<li><a href="#xiang-su-chu-li">像素处理</a></li>
+<li><a href="#zong-jie">总结</a></li>
+</ul>
+<!-- tocstop -->
+
+</div>
+
+<hr>
+<p>图形渲染管线(Graphic Rendering Pipeline)是计算机图形学中十分重要的内容。</p>
+<p><strong>图形渲染管线</strong>是将在内存中存储的三维场景(包括虚拟摄像机、光源、模型、图像)，加载入显存中，然后通过几何阶段和光栅化阶段进行计算，最终渲染生成屏幕上的像素的一系列<strong>流水线</strong>。</p>
+<p>图形渲染管线的主要作用是将一个三维场景渲染成一个二位图像并显示在屏幕上。</p>
+<p>下面将介绍图形渲染管线的一系列流程。</p>
+<h2><span id="gai-shu">概述</span></h2><p>图形渲染管线的流程划分有很多中，这篇文章将采用<strong>应用阶段</strong>、<strong>几何处理</strong>、<strong>光栅化</strong>、<strong>像素处理</strong>将整个图形渲染管线分成这四个阶段依次来进行介绍。</p>
+<p>以上这四个阶段是根据<em>Real-Time Rendering 4th</em>这本书来划分的</p>
+<p><img src="https://i.loli.net/2021/03/09/ArOl34RwZjdBhJ6.png" alt="渲染管线概述"></p>
+<h2><span id="ying-yong-jie-duan">应用阶段</span></h2><p>应用阶段是由开发者主导的阶段，这一阶段的主要任务是</p>
+<ol>
+<li>准备好三维场景的数据</li>
+<li>剔除不可见的物体</li>
+<li>设置好每个模型的渲染状态</li>
+</ol>
+<p><strong>应用阶段</strong>可以分为三个阶段：</p>
+<h3><span id="jiang-shu-ju-jia-zai-dao-xian-cun-zhong">将数据加载到显存中</span></h3><p>将三维场景的数据加载进入显存中，因为显卡对于显存的访问比较快，并且大多数显卡对内存没有直接访问的权利。</p>
+<h3><span id="she-zhi-xuan-ran-zhuang-tai">设置渲染状态</span></h3><p>渲染状态是定义场景中的模型是如何被渲染的：</p>
+<ul>
+<li>使用哪个顶点着色器和片元着色器？</li>
+<li>场景中的光源的属性？</li>
+<li>如何使用材质？</li>
+</ul>
+<h3><span id="diao-yong-draw-call">调用Draw Call</span></h3><p>设置好渲染状态之后，CPU就使用<strong>Draw Call</strong>命令来让GPU来对图元进行渲染</p>
+<p>Draw Call是CPU的命令，过多的话会影响性能，在使用过程中需要用批处理的方法来合并网格，从而减少Draw Call的使用。</p>
+<h2><span id="ji-he-chu-li">几何处理</span></h2><p>几何处理阶段本身也是一个小的流水线，依次是<strong>顶点着色器</strong>、<strong>投影</strong>、<strong>剪裁</strong>、<strong>屏幕映射</strong></p>
+<p><img src="https://i.loli.net/2021/03/09/bz6kHtjh3yCMSPa.png" alt="几何处理"></p>
+<p>几何处理阶段主要进行逐三角形的和逐顶点的操作，下面将介绍这几个阶段</p>
+<h3><span id="ding-dian-zhao-se-qi">顶点着色器</span></h3><p>顶点着色器是流水线第一个阶段，输入来自CPU，顶点着色器的处理单位是顶点，输入进来的每一个顶点都会调用一次顶点着色器。顶点着色器最基本的作用是将顶点坐标从模型空间转换到<strong>齐次裁剪空间</strong>之中。</p>
+<h3><span id="tou-ying">投影</span></h3><p>投影即是将模型投影到虚拟摄像机之中，从而显示到屏幕这个二维平面上。</p>
+<h3><span id="jian-cai">剪裁</span></h3><p>有时候可能场景要比摄像机的视野大很多，那么不在摄像机视野范围内的图元不需要被处理，就需要把图元进行裁剪处理。</p>
+<p>图元有三种可能：完全在视野内、完全在视野外、部分在视野内</p>
+<ol>
+<li>完全在视野内：直接送入下一个流水线</li>
+<li>完全在视野外：不再送入下一个流水线</li>
+<li>部分在视野内：裁剪之后送入下一个流水线</li>
+</ol>
+<h3><span id="ping-mu-ying-she">屏幕映射</span></h3><p>把每个图元的x，y坐标通过变换变成屏幕坐标，z坐标没有变化，屏幕坐标和z坐标一起被称为窗口坐标。</p>
+<p>窗口坐标系会一起被传送到光栅化阶段。</p>
+<p><strong>注意</strong>：OpenGL的屏幕坐标系起始点是左下角，DirectX则是左上角。</p>
+<h2><span id="guang-zha-hua">光栅化</span></h2><p>光栅化阶段又分为两个小的阶段，包括<strong>三角形设置</strong>、<strong>三角形遍历</strong></p>
+<p><img src="https://i.loli.net/2021/03/10/OYhcsJZ4oFGIvwA.png" alt="光栅化"></p>
+<h3><span id="san-jiao-xing-she-zhi">三角形设置</span></h3><p><strong>三角形设置</strong>阶段会计算光栅化一个三角形网格所需的信息，上一阶段输出的都是三角网格的顶点，而这个阶段会计算得到三角形的边界像素的坐标信息。以便于下一阶段判断像素是否在三角形中。</p>
+<h3><span id="san-jiao-xing-bian-li">三角形遍历</span></h3><p><strong>三角形遍历</strong>阶段会检查每一个像素是否被一个三角网格覆盖，如果被覆盖的话会生成一个<strong>片元</strong>。通过三角形的三个顶点的信息，对三角形内部的片元进行颜色和深度的插值。</p>
+<h2><span id="xiang-su-chu-li">像素处理</span></h2><p>这个时候，所有被认为在三角形内部的点都已经被发现了，像素处理阶段被分为<strong>像素着色</strong>、<strong>合并</strong>两个部分。</p>
+<p><img src="https://i.loli.net/2021/03/10/OtkhFzruApcGNq6.png" alt="像素处理"></p>
+<h3><span id="xiang-su-zhao-se">像素着色</span></h3><p>在OpenGL中被称为<strong>片元着色</strong></p>
+<p>所有逐片元的计算都是在这里完成的，使插值了的着色数据作为输入。最终结果是一个或多个将被传入到下一个阶段的颜色。</p>
+<p>程序员可以高度操作这一阶段，利用片元着色器来实现。</p>
+<p>这一阶段有各种各样的技术，其中最重要的就是texturing。</p>
+<h3><span id="he-bing">合并</span></h3><p>这个阶段的主要任务是</p>
+<ul>
+<li>决定每个片元的可见性，涉及到了很多测试的工作，包括深度测试和模板测试</li>
+<li>如果一个片元通过了所有的测试，就需要把这个片元的颜色值和已经存储在颜色缓冲区中的颜色进行混合</li>
+</ul>
+<p>渲染过程是一个物体一个物体画到屏幕上的，每个像素的颜色信息被存在一个名为颜色缓冲的地方。执行这次渲染的时候，可能会用到上次渲染的结果。如果物体是非透明物体，可以直接关闭<strong>混合</strong>操作，这样片元着色器计算得到的颜色值会直接覆盖颜色缓冲区中的颜色值。而如果是半透明物体，则需要使用混合操作来让物体看起来是透明的。</p>
+<h2><span id="zong-jie">总结</span></h2><p>以上即是图形渲染管线的全部流程，但值得注意的是，图形渲染管线并不是一成不变的，并且不同的图形接口实现的管线流程可能与上面所述并不完全一致，上述的管线只是作为一个参考来看待，比如说有的时候深度测试会提前到片元着色器之前。</p>
+<p>下面是这篇文章参考资料:<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/leixinyue/p/11076220.html">博客图形渲染管线简介</a><br><a target="_blank" rel="noopener" href="https://book.douban.com/subject/26821639/">Unity Shader入门精要</a></p>
+
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+      
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+
+  
+    <article class="post">
+  <header>
+    
+      <div class="icon"></div>
+      <a href="/2021/03/06/单调栈/">
+  <time datetime="2021-03-06T08:25:42.000Z">
+    2021-03-06
+  </time>
+</a>
+    
+    
+  
+    <h1 class="title"><a href="/2021/03/06/单调栈/">单调栈</a></h1>
+  
+
+  </header>
+  
+  <div class="entry">
+    
+      <p>今天做leetcode每日一题，第一次遇到了需要使用单调栈来解决的问题，写个博客来讲一下什么是单调栈</p>
+<p>今天的leetcode题目:<a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/next-greater-element-ii/">leetcode503题:下一个更大元素2</a></p>
+<h2><span id="dan-diao-zhan-shi-shi-me">单调栈是什么</span></h2><p>当然单调栈不是一个具体的数据结构，和优先队列不同，只是一个普通的先进后出的栈，只是自己的维护这个栈的时候需要保持这个栈的单调性。</p>
+<p>单调递增栈 指的是从栈顶到栈底的值是递增的</p>
+<p>单调递减栈 指的是从栈顶到栈底的值是递减的</p>
+<p>拿一个例子来说明吧，这里有一个数组[5,9,6,7,4,3,1]，这个数组中的数依次加入单调递增栈中，会出现什么结果呢？</p>
+<ol>
+<li>5压入栈中</li>
+<li>需要将9压入栈中，但是压入后不符合单调递增栈，所以需要将5出栈，再将9压栈，此时栈中只有9</li>
+<li>将6压入栈中，符合单调递增栈，栈中有6，9</li>
+<li>需要将7压入栈中，但是7比6大，所以无法压入，只能将6出栈，再压入7</li>
+<li>将4压栈</li>
+<li>将3压栈</li>
+<li>将1压栈</li>
+</ol>
+<p>以上就是维护一个单调递增栈的效果，无论什么时候从栈顶到栈底都是递增的</p>
+<h2><span id="ti-mu-de-jie-jue">题目的解决</span></h2><p>给定一个循环数组（最后一个元素的下一个元素是数组的第一个元素），输出每个元素的下一个更大元素。数字 x 的下一个更大的元素是按数组遍历顺序，这个数字之后的第一个比它更大的数，这意味着你应该循环地搜索它的下一个更大的数。如果不存在，则输出 -1。</p>
+<p>这个题很适合用单调递增栈来解决，遍历数组，如果当前元素比栈顶元素要小，那就压入栈中，如果当前元素比栈顶元素大小要大，那么这个数符合题目要求，将栈中比这个数小的元素全部出栈即可。由于是循环数组，所以需要遍历两次序列。</p>
+<p>官方题解的代码已经非常好了，就直接贴在下面的，防止读者一直在不同页面跳来跳去：</p>
+<p><a target="_blank" rel="noopener" href="https://leetcode-cn.com/problems/next-greater-element-ii/solution/xia-yi-ge-geng-da-yuan-su-ii-by-leetcode-bwam/">官方题解</a></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">nextGreaterElements</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&amp; nums)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> n = nums.size();</span><br><span class="line">        <span class="function"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; <span class="title">ret</span><span class="params">(n, <span class="number">-1</span>)</span></span>;</span><br><span class="line">        <span class="built_in">stack</span>&lt;<span class="keyword">int</span>&gt; stk;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n * <span class="number">2</span> - <span class="number">1</span>; i++) &#123;</span><br><span class="line">            <span class="keyword">while</span> (!stk.empty() &amp;&amp; nums[stk.top()] &lt; nums[i % n]) &#123;</span><br><span class="line">                ret[stk.top()] = nums[i % n];</span><br><span class="line">                stk.pop();</span><br><span class="line">            &#125;</span><br><span class="line">            stk.push(i % n);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+      
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+
+  
+    <article class="post">
+  <header>
+    
+      <div class="icon"></div>
+      <a href="/2021/03/04/测试markdown语法/">
+  <time datetime="2021-03-04T12:32:09.000Z">
+    2021-03-04
+  </time>
+</a>
+    
+    
+  
+    <h1 class="title"><a href="/2021/03/04/测试markdown语法/">测试markdown语法</a></h1>
+  
+
+  </header>
+  
+  <div class="entry">
+    
+      <p>第一次使用hexo，测试一下hexo的markdown语法支持的是否完备，下面是测试的结果</p>
+<h2><span id="ce-shi-qian-ru-dai-ma">测试嵌入代码</span></h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;Hello, world!&quot;</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2><span id="ce-shi-shu-xue-gong-shi">测试数学公式</span></h2><h3><span id="du-li-gong-shi-shi-li">独立公式示例</span></h3><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>J</mi><mi>α</mi></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>0</mn></mrow><mi mathvariant="normal">∞</mi></msubsup><mfrac><mrow><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mi>m</mi></msup></mrow><mrow><mi>m</mi><mo stretchy="false">!</mo><mi mathvariant="normal">Γ</mi><mo stretchy="false">(</mo><mi>m</mi><mo>+</mo><mi>α</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></mfrac><msup><mrow><mo fence="true">(</mo><mfrac><mi>x</mi><mn>2</mn></mfrac><mo fence="true">)</mo></mrow><mrow><mn>2</mn><mi>m</mi><mo>+</mo><mi>α</mi></mrow></msup><mtext>，独立公式示例</mtext></mrow><annotation encoding="application/x-tex">J_\alpha(x) = \sum_{m=0}^\infty \frac{(-1)^m}{m! \Gamma (m + \alpha + 1)} {\left({ \frac{x}{2} }\right)}^{2m + \alpha} \text {，独立公式示例}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.09618em;">J</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.09618em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.574008em;vertical-align:-0.52em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:-0.0000050000000000050004em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.804292em;"><span style="top:-2.40029em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">m</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.2029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">∞</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.29971000000000003em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.01em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">m</span><span class="mclose mtight">!</span><span class="mord mtight">Γ</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight">m</span><span class="mbin mtight">+</span><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span><span class="mbin mtight">+</span><span class="mord mtight">1</span><span class="mclose mtight">)</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.485em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mopen mtight">(</span><span class="mord mtight">−</span><span class="mord mtight">1</span><span class="mclose mtight"><span class="mclose mtight">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7385428571428572em;"><span style="top:-2.931em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">m</span></span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.52em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord"><span class="mord"><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size1">(</span></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size1">)</span></span></span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.054008em;"><span style="top:-3.3029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathnormal mtight">m</span><span class="mbin mtight">+</span><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span></span></span></span></span></span></span></span></span><span class="mord text"><span class="mord cjk_fallback">，独立公式示例</span></span></span></span></span>
+
+<h3><span id="qian-ru-gong-shi-shi-li">嵌入公式示例</span></h3><p>显示：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>J</mi><mi>α</mi></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>0</mn></mrow><mi mathvariant="normal">∞</mi></msubsup><mfrac><mrow><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mi>m</mi></msup></mrow><mrow><mi>m</mi><mo stretchy="false">!</mo><mi mathvariant="normal">Γ</mi><mo stretchy="false">(</mo><mi>m</mi><mo>+</mo><mi>α</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></mfrac><msup><mrow><mo fence="true">(</mo><mfrac><mi>x</mi><mn>2</mn></mfrac><mo fence="true">)</mo></mrow><mrow><mn>2</mn><mi>m</mi><mo>+</mo><mi>α</mi></mrow></msup><mtext>，行内公式示例</mtext></mrow><annotation encoding="application/x-tex">J_\alpha(x) = \sum_{m=0}^\infty \frac{(-1)^m}{m! \Gamma (m + \alpha + 1)} {\left({ \frac{x}{2} }\right)}^{2m + \alpha} \text {，行内公式示例}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.09618em;">J</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.09618em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.574008em;vertical-align:-0.52em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:-0.0000050000000000050004em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.804292em;"><span style="top:-2.40029em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">m</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.2029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">∞</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.29971000000000003em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.01em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">m</span><span class="mclose mtight">!</span><span class="mord mtight">Γ</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight">m</span><span class="mbin mtight">+</span><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span><span class="mbin mtight">+</span><span class="mord mtight">1</span><span class="mclose mtight">)</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.485em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mopen mtight">(</span><span class="mord mtight">−</span><span class="mord mtight">1</span><span class="mclose mtight"><span class="mclose mtight">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7385428571428572em;"><span style="top:-2.931em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mathnormal mtight">m</span></span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.52em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord"><span class="mord"><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size1">(</span></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size1">)</span></span></span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.054008em;"><span style="top:-3.3029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathnormal mtight">m</span><span class="mbin mtight">+</span><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span></span></span></span></span></span></span></span></span><span class="mord text"><span class="mord cjk_fallback">，行内公式示例</span></span></span></span></span></p>
+<h2><span id="ce-shi-lie-ju-gong-neng">测试列举功能</span></h2><ol>
+<li>这是第一点</li>
+<li>这是第二点</li>
+<li>这是第三点</li>
+</ol>
+<ul>
+<li>这是第一层<ul>
+<li>这是第二层<ul>
+<li>这是第三层</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>这还是第一层</li>
+</ul>
+<h2><span id="ce-shi-zi-ti">测试字体</span></h2><p>斜体：<em>这是斜体</em></p>
+<p>粗体：<strong>这是粗体</strong></p>
+<h2><span id="fen-ge-xian-ce-shi">分割线测试</span></h2><p>下面是分割线</p>
+<hr>
+<h2><span id="ce-shi-yin-yong">测试引用</span></h2><blockquote>
+<p>这是引用</p>
+<blockquote>
+<p>这是引用</p>
+</blockquote>
+</blockquote>
+<h2><span id="ce-shi-tu-pian">测试图片</span></h2><p><img src="https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=3676031912,3657202607&fm=11&gp=0.jpg" alt="图片"></p>
+<h2><span id="ce-shi-biao-ge">测试表格</span></h2><table>
+<thead>
+<tr>
+<th>我</th>
+<th>不爱</th>
+<th>你</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>我</td>
+<td>爱</td>
+<td>你</td>
+</tr>
+</tbody></table>
+
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+      
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+    <a href="/" class="prev">Prev</a>
+  
+  
+    <a href="/page/3/" class="next">Next</a>
+  
+  <div class="clearfix"></div>
+</nav>
+
+</div>
+  </div>
+  <footer id="footer"><div class="copyright">
+  
+  &copy; 2021 <a href="/">Cloud</a>
+  
+</div>
+<div class="theme-copyright">
+  Theme by <a href="https://github.com/orderedlist" target="_blank">orderedlist</a>
+   | 
+  Redesign by <a href="http://heroicyang.com/" target="_blank">Heroic Yang</a>
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+</body>
+</html>
