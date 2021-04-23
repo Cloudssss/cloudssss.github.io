@@ -511,7 +511,7 @@ a {
                 <div data-v-477b291f="" class="v-list__tile__content">
                   <div data-v-477b291f="" class="v-list__tile__title">
                     <div data-v-477b291f="" class="layout justify-end">
-                      <h2 data-v-477b291f="" id="李丕轩">李丕轩</h2>
+                      <h2 data-v-477b291f="" id="user_name">许成玉</h2>
                     </div>
                   </div>
                 </div>
@@ -668,13 +668,13 @@ a {
       document.getElementById("marquee").innerHTML = now;
       document.getElementById("copy").innerHTML = now;
       document.getElementById("node").innerHTML = now;
-      document.getElementById("user_name").innerHTML = Request["name"];
+      document.getElementById("user_name").innerHTML = "许成玉";
       if (text_type == 0)
         document.getElementById("text_type").innerHTML =
           "本科生用户，出校授权有效！";
       else
         document.getElementById("text_type").innerHTML =
-          "本科用户，出校授权有效！";
+          "本科生用户，出校授权有效！";
       var area = document.getElementById("box");
       var regObj = /\d+/;
       var tmpX = parseInt(regObj.exec(area.style.transform)[0]) * -1;
