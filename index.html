@@ -66,6 +66,51 @@
   <header>
     
       <div class="icon"></div>
+      <a href="/2021/04/25/Shadow-Mapping/">
+  <time datetime="2021-04-25T06:11:05.000Z">
+    2021-04-25
+  </time>
+</a>
+    
+    
+  
+    <h1 class="title"><a href="/2021/04/25/Shadow-Mapping/">Shadow Mapping</a></h1>
+  
+
+  </header>
+  
+  <div class="entry">
+    
+      <p>最近在学习<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1X7411F744">games101</a></p>
+<p>会记录一些自认为比较重要的知识</p>
+<h2><span id="shadow-mapping-de-zuo-yong">Shadow Mapping 的作用</span></h2><p>Shadow Mapping的作用是为了实现物体被光线照射的时候会出现阴影的现象</p>
+<h2><span id="dian-guang-yuan-de-yin-ying">点光源的阴影</span></h2><p>将一个摄像机放在点光源那里，做一个光栅化，此时会得到光源会看到什么，并且记录下来深度图(shadow map)</p>
+<p>再将自己屏幕所代表的摄像机进行观察，做光栅化，得到片段之后，将这个片段投影回点光源代表的摄像机，就可以知道这个片段在电光源摄像机的深度，通过和深度图进行比较之后，就可以知道这个点是不是在阴影之中</p>
+<h2><span id="ying-yin-ying-he-ruan-yin-ying">硬阴影和软阴影</span></h2><p>硬阴影就是强光照射的时候，阴影和非阴影之间的过度等于没有，发生了突变</p>
+<p>软阴影则是，阴影和非阴影之间有较为平滑的过度，并且越接近物体根部的地方阴影越硬，而越原理物体根部的地方阴影越软</p>
+<p>软阴影相对于硬阴影比较真实且更为常见</p>
+<p>如下图</p>
+<p><img src="https://i.loli.net/2021/04/25/nvDjYsUz7Obh6G5.png" alt="软阴影.png"></p>
+<p>能完全看到光源的点没有阴影，看到部分光源的点是半阴影，而完全看不到光源的点则是阴影，这就是软阴影的原因</p>
+<p>所以点光源不会产生软阴影，如果产生了软阴影，一定说明这个光源有一定的大小</p>
+
+    
+  </div>
+  <footer class="end-sep">
+    
+      
+      
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+
+  
+    <article class="post">
+  <header>
+    
+      <div class="icon"></div>
       <a href="/2021/04/06/图形学之变换/">
   <time datetime="2021-04-06T01:46:28.000Z">
     2021-04-06
@@ -194,88 +239,6 @@
 <p>首先需要注意的是，有许多个8个字节大小的内存空间，所有的8字节大小的内存空间都由一个链表管理，之后的许多个16个字节大小的内存空间、24个字节大小的内存空间也和这个类似，每种大小的内存空间都由一个链表来进行管理，所以说一共有16个<em>free-list</em>。</p>
 <p>以96个字节大小的内存空间为例子，二级空间配置器中由一个数组free_list[16]，这个数组的每一个元素，存储一个内存空间的地址，这个地址指向的就是96字节大小的<em>free-list</em>的第一个结点，而这个节点世界上就是一个内存空间，只是这个内存空间的前面四个字节，存储的是指向下一个节点的地址。如果要取出这块内存空间，需要将free_list[11]这个元素更新成下一个节点的地址。</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> * <span class="title">allocate</span><span class="params">(<span class="keyword">size_t</span> n)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    obj * __VOLATILE * my_free_list;</span><br><span class="line">    obj * __RESTRICT result;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 如果大于__MAX_BYTES就调用第一级配置器</span></span><br><span class="line">    <span class="keyword">if</span> (n &gt; (<span class="keyword">size_t</span>) __MAX_BYTES) &#123;</span><br><span class="line">        <span class="keyword">return</span> (malloc_alloc::allocate(n));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 找到free_list[11]（96字节大小）这个元素的地址，这个元素的内容也是一个地址，指的是一个内存空间</span></span><br><span class="line">    my_free_list = free_list + FREELIST_INDEX(n);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里是取出了这块内存</span></span><br><span class="line">    result = *my_free_list;</span><br><span class="line">    <span class="keyword">if</span> (result == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">void</span> *r = refill(ROUND_UP(n));</span><br><span class="line">        <span class="keyword">return</span> r;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将free_list[11]的值改为下一个96字节大小的内存空间的地址</span></span><br><span class="line">    *my_free_list = result -&gt; free_list_link;</span><br><span class="line">    <span class="keyword">return</span> (result);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-    
-  </div>
-  <footer class="end-sep">
-    
-      
-      
-    
-    <div class="clearfix"></div>
-  </footer>
-</article>
-
-
-  
-    <article class="post">
-  <header>
-    
-      <div class="icon"></div>
-      <a href="/2021/03/13/当在浏览器中输入google-com并按下回车后发生了什么/">
-  <time datetime="2021-03-13T11:41:45.000Z">
-    2021-03-13
-  </time>
-</a>
-    
-    
-  
-    <h1 class="title"><a href="/2021/03/13/当在浏览器中输入google-com并按下回车后发生了什么/">当在浏览器中输入google.com并按下回车后发生了什么</a></h1>
-  
-
-  </header>
-  
-  <div class="entry">
-    
-      <p>看到标题应该就清楚了，这篇文章是解释一个较为常规的问题，当你在浏览器的地址栏输入一个网址的时候，有很多事情发生在你的浏览器与服务器之间，在这背后涉及到了一系列的计算机网络的知识。</p>
-<h2><span id="jie-xi-url">解析url</span></h2><p>url全称是统一资源定位符，用于作为表示互联网的地址</p>
-<p>url的标准格式如下：</p>
-<pre><code>[协议类型]://[服务器地址]:[端口号]/[资源层级UNIX文件路径][文件名]?[查询]#[片段ID]
-</code></pre>
-<p>我们输入的google.com会被浏览器自动补全成为</p>
-<pre><code>https://google.com:443
-</code></pre>
-<p>意思就是采用https协议，去访问google.com域名的443端口</p>
-<h2><span id="dns-cha-xun">DNS查询</span></h2><p>上一步我们成功得到了完整的url，之后就可以解析url中包含的完整地址了，即google.com地址，于是我们这一步开始DNS查询步骤</p>
-<ul>
-<li>首先查询google.com是否存在浏览器缓存中</li>
-<li>如果缓存中没有，那么就会查询操作系统的本地Hosts中查找域名的缓存记录</li>
-<li>如果依旧查不到，浏览器会向DNS服务器发一条查询请求</li>
-<li>查询DNS服务器</li>
-</ul>
-<p>通过DNS服务器我们会得到google.com对应的ip地址</p>
-<h2><span id="jian-li-tcp-lian-jie">建立TCP连接</span></h2><p>上一步我们成功得到了ip地址，这一步则需要使用套接字来建立TCP连接了。</p>
-<p>浏览器会首先会使用ip地址和端口创建一个TCP流套接字，就可以开始TCP的三次握手建立连接环节：</p>
-<ul>
-<li>浏览器选择一个初始序列号(ISN)，将设置了SYN位的封包发送给服务器端，表明自己要建立连接并设置初始序列号</li>
-<li>服务器收到SYN包<ul>
-<li>服务器端选择自己的初始序列号</li>
-<li>服务器设置SYN位，表明自己选择了一个初始序列号</li>
-<li>服务器把(客户端ISN+1)复制到ACK域，并设置ACK位，表明自己接收到了客户端的第一个封包</li>
-</ul>
-</li>
-<li>客户端确认连接<ul>
-<li>自己的序列号+1</li>
-<li>把(服务器端ISN+1)复制到ACK域，并设置ACK位，表明收到了客户端的第一个封包</li>
-</ul>
-</li>
-</ul>
-<p>建立连接之后就可以来传输数据了</p>
-<p>如果需要断开连接，则需要TCP的四次挥手环节：</p>
-<ul>
-<li>要关闭连接的一方发送一个FIN包</li>
-<li>另一方确认这个FIN包，进入半连接状态，此时另一方只可以发送，不能接收</li>
-<li>另一方发送自己的FIN包</li>
-<li>最开始关闭连接的一方使用ACK包来确认接收到了FIN</li>
-</ul>
-<h2><span id="shi-yong-http-xie-yi">使用HTTP协议</span></h2><p>TCP连接完成之后，可以来传输数据了</p>
-<p>浏览器就可以发送HTTP请求报文来请求服务器发送html文件了</p>
-<p>服务器接收到请求报文之后，会向客户端发送html文件</p>
-<p>浏览器就得到了html文件……</p>
-<h2><span id="liu-lan-qi-xuan-ran">浏览器渲染</span></h2><p>html文件是纯文本文件，普通人是很难读懂的</p>
-<p>就需要浏览器对html文件进行渲染</p>
-<p>渲染过后就是大家常见的搜索界面</p>
-<h2><span id="zong-jie">总结</span></h2><p>至此，键入google.com并按下回车的过程已经结束了</p>
 
     
   </div>
